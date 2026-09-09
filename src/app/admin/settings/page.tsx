@@ -95,12 +95,13 @@ export default function SettingsPage() {
         <div>
           <label className="field-label">Send submissions to</label>
           <input
-            type="email"
+            type="text"
+            placeholder="hr@ahanahospitals.in, systemsahana@gmail.com"
             value={form.notifyEmail}
             onChange={(e) => setForm({ ...form, notifyEmail: e.target.value })}
           />
           <p className="mt-1 text-xs text-navy-500">
-            Each submit emails this address: (1) PDF of filled answers (2) original resume file.
+            Each submit emails this address: (1) PDF of filled answers (2) original resume file. Multiple emails can be separated by commas.
           </p>
         </div>
       </section>
