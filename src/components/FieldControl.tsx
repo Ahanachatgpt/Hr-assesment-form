@@ -164,6 +164,22 @@ export function FieldControl({ field, value, onChange, disabled, error, hideTitl
                           }
                         }
 
+                        if (/family/i.test(field.label) && /relation/i.test(rf.label)) {
+                          const SINGLE_RELATIONS = ["father", "mother", "spouse"];
+                          const chosenByOthers = entryRows
+                            .filter((_, idx) => idx !== i)
+                            .map((r) => selectChoice(r[rf.id]).trim().toLowerCase())
+                            .filter((val) => SINGLE_RELATIONS.includes(val));
+
+                          const filteredOptions = (rf.options || []).filter((opt) => {
+                            const isSingle = SINGLE_RELATIONS.includes(opt.toLowerCase());
+                            if (!isSingle) return true;
+                            return !chosenByOthers.includes(opt.toLowerCase());
+                          });
+
+                          rfToRender = { ...rf, options: filteredOptions };
+                        }
+
                         // For Employment Details: Show question only when organization name is filled AND no other row is currently marked Present
                         const isEmpStartDate = isEmployment && /start\s*date/i.test(rf.label);
                         const isEmpEndDate = isEmployment && empEndField && rf.id === empEndField.id;

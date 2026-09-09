@@ -253,6 +253,23 @@ export function fieldError(field: FormField, value: unknown, file?: File | File[
     if (isEmploymentField(field) && !Array.isArray(value)) {
       return "Please select Yes or No.";
     }
+    if (/family/i.test(field.label) && Array.isArray(value)) {
+      const relField = (field.repeaterFields || []).find((rf) => /relation/i.test(rf.label));
+      if (relField) {
+        const counts: Record<string, number> = {};
+        for (const row of value as Record<string, unknown>[]) {
+          const rel = selectChoice(row[relField.id]).trim();
+          if (["Father", "Mother", "Spouse"].some((r) => r.toLowerCase() === rel.toLowerCase())) {
+            const key = rel.toLowerCase();
+            counts[key] = (counts[key] || 0) + 1;
+            if (counts[key] > 1) {
+              const label = rel.charAt(0).toUpperCase() + rel.slice(1);
+              return `${label} can only be added once in Family Details.`;
+            }
+          }
+        }
+      }
+    }
     if (!field.required) return "";
     const rows = Array.isArray(value) ? (value as Record<string, unknown>[]) : [];
     const filled = rows.some((row) =>
