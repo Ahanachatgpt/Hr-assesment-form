@@ -19,14 +19,14 @@ export function defaultHrForm(): AssessmentForm {
 
   const eduExam = field({ type: "text", label: "Examination / Degree", required: true, width: "half" });
   const eduSchool = field({ type: "text", label: "School / College", required: true, width: "half" });
-  const eduStart = field({ type: "date", label: "Start Date", width: "third" });
-  const eduEnd = field({ type: "date", label: "End Date", width: "third" });
-  const eduMarks = field({ type: "text", label: "Marks obtained in %", placeholder: "90.4", width: "quarter" });
+  const eduStart = field({ type: "date", label: "Start Date", width: "third", hideDay: true });
+  const eduEnd = field({ type: "date", label: "End Date", width: "third", hideDay: true });
+  const eduMarks = field({ type: "text", label: "Marks obtained in %", placeholder: "e.g. 90.4", width: "quarter" });
 
   const empOrg = field({ type: "text", label: "Organisation Name", width: "half" });
   const empDesig = field({ type: "text", label: "Designation", width: "half" });
-  const empStart = field({ type: "date", label: "Start Date", width: "third" });
-  const empEnd = field({ type: "date", label: "End Date", width: "third" });
+  const empStart = field({ type: "date", label: "Start Date", width: "third", hideDay: true });
+  const empEnd = field({ type: "date", label: "End Date", width: "third", hideDay: true });
   const empSalary = field({ type: "text", label: "Monthly Salary", width: "third" });
   const empReason = field({ type: "text", label: "Resignation Reason", width: "full" });
 

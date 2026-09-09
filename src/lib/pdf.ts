@@ -73,6 +73,10 @@ function display(value: unknown): string {
     const d = new Date(`${raw}T00:00:00`);
     return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
   }
+  if (/^\d{4}-\d{2}$/.test(raw)) {
+    const d = new Date(`${raw}-01T00:00:00`);
+    return d.toLocaleDateString("en-GB", { month: "short", year: "numeric" });
+  }
   if (
     /^i agree that the information/i.test(raw) ||
     /^i hereby declare/i.test(raw) ||
@@ -477,6 +481,10 @@ function parseLooseDate(value: unknown): Date | null {
   if (!raw) return null;
   if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
     const d = new Date(`${raw}T00:00:00`);
+    return Number.isNaN(d.getTime()) ? null : d;
+  }
+  if (/^\d{4}-\d{2}$/.test(raw)) {
+    const d = new Date(`${raw}-01T00:00:00`);
     return Number.isNaN(d.getTime()) ? null : d;
   }
   const t = Date.parse(raw);

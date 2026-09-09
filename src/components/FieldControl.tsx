@@ -1,7 +1,7 @@
 "use client";
 
 import { FormField } from "@/lib/types";
-import { isEmploymentField, isMobileField, mobileDigits, selectChoice, showSelectNotes, yesNoChoice } from "@/lib/utils";
+import { isDobField, isEmploymentField, isMobileField, mobileDigits, selectChoice, showSelectNotes, yesNoChoice } from "@/lib/utils";
 import { DateDropdowns } from "./DateDropdowns";
 
 interface Props {
@@ -326,6 +326,13 @@ function ControlInner({ field, value, onChange, disabled, error }: Props) {
   }
 
   if (field.type === "date") {
+    const isDob = isDobField(field);
+    const hideDay =
+      Boolean(field.hideDay) ||
+      (!isDob &&
+        /start|end|from|to|year|degree|course|examination|qualification|employment|experience|joining|review/i.test(
+          field.label
+        ));
     return (
       <DateDropdowns
         value={value}
@@ -333,7 +340,8 @@ function ControlInner({ field, value, onChange, disabled, error }: Props) {
         disabled={disabled}
         error={invalid}
         label={field.label}
-        compact={field.width === "third"}
+        hideDay={hideDay}
+        compact={field.width === "third" || field.width === "quarter"}
       />
     );
   }

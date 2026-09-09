@@ -33,9 +33,12 @@ function pad(n: number) {
 }
 
 function parseIso(value: unknown) {
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value ?? "").trim());
-  if (!m) return { year: "", month: "", day: "" };
-  return { year: m[1], month: String(Number(m[2])), day: String(Number(m[3])) };
+  const raw = String(value ?? "").trim();
+  const m3 = /^(\d{4})-(\d{2})-(\d{2})$/.exec(raw);
+  if (m3) return { year: m3[1], month: String(Number(m3[2])), day: String(Number(m3[3])) };
+  const m2 = /^(\d{4})-(\d{2})$/.exec(raw);
+  if (m2) return { year: m2[1], month: String(Number(m2[2])), day: "" };
+  return { year: "", month: "", day: "" };
 }
 
 function daysInMonth(year: string, month: string) {
@@ -67,6 +70,7 @@ export function DateDropdowns({
   error,
   label = "",
   compact = false,
+  hideDay = false,
 }: {
   value: unknown;
   onChange: (value: string) => void;
@@ -74,6 +78,7 @@ export function DateDropdowns({
   error?: boolean;
   label?: string;
   compact?: boolean;
+  hideDay?: boolean;
 }) {
   const fromValue = parseIso(value);
   const [year, setYear] = useState(fromValue.year);
@@ -82,10 +87,10 @@ export function DateDropdowns({
 
   useEffect(() => {
     const p = parseIso(value);
-    if (p.year && p.month && p.day) {
+    if (p.year && p.month) {
       setYear(p.year);
       setMonth(p.month);
-      setDay(p.day);
+      if (p.day) setDay(p.day);
     }
   }, [String(value ?? "")]);
 
@@ -103,10 +108,49 @@ export function DateDropdowns({
     setYear(y);
     setMonth(m);
     setDay(d);
-    onChange(toIso(y, m, d));
+    if (hideDay) {
+      onChange(y && m ? `${y}-${pad(Number(m))}` : "");
+    } else {
+      onChange(toIso(y, m, d));
+    }
   }
 
   const monthNames = compact ? MONTHS_SHORT : MONTHS;
+
+  if (hideDay) {
+    return (
+      <div className={`grid min-w-0 grid-cols-2 ${compact ? "gap-1.5" : "gap-2"}`}>
+        <select
+          aria-label="Month"
+          disabled={disabled}
+          className={`min-w-0 max-w-full ${invalid || ""} ${compact ? "!px-1.5 sm:!px-2" : ""}`.trim()}
+          value={month}
+          onChange={(e) => update("month", e.target.value)}
+        >
+          <option value="">Month</option>
+          {monthNames.map((name, i) => (
+            <option key={MONTHS[i]} value={String(i + 1)}>
+              {name}
+            </option>
+          ))}
+        </select>
+        <select
+          aria-label="Year"
+          disabled={disabled}
+          className={`min-w-0 max-w-full ${invalid || ""} ${compact ? "!px-1.5 sm:!px-2" : ""}`.trim()}
+          value={year}
+          onChange={(e) => update("year", e.target.value)}
+        >
+          <option value="">Year</option>
+          {years.map((y) => (
+            <option key={y} value={String(y)}>
+              {y}
+            </option>
+          ))}
+        </select>
+      </div>
+    );
+  }
 
   return (
     <div className={`grid min-w-0 grid-cols-3 ${compact ? "gap-1.5" : "gap-2"}`}>

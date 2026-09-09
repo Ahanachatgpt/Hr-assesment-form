@@ -32,6 +32,7 @@ export interface FormField {
   followUpLabel?: string;
   followUpPlaceholder?: string;
   multiple?: boolean;
+  hideDay?: boolean;
 }
 
 export type RatingLevel = "Excellent" | "Very good" | "Good" | "Fair" | "Poor";
