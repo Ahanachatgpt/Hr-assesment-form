@@ -89,6 +89,7 @@ export function FormBuilder({ formId }: { formId: string }) {
   }
 
   async function save() {
+    if (!form) return;
     setSaving(true);
     setMsg("");
     try {

@@ -64,8 +64,9 @@ export function PublicForm({ slug }: { slug: string }) {
   }
 
   function updateAnswer(id: string, value: unknown) {
+    if (!form) return;
     const nextAnswers = { ...answers, [id]: value };
-    const field = form?.fields.find((f) => f.id === id);
+    const field = form.fields.find((f) => f.id === id);
     if (field && isEmploymentField(field) && Array.isArray(value) && value.length === 0) {
       const roles = form.fields.find(isRolesField);
       if (roles) nextAnswers[roles.id] = "";

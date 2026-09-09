@@ -49,15 +49,15 @@ export function buildFormSteps(fields: FormField[]): FormStep[] {
       let docs = steps.find((s) => s.title === docsTitle);
       if (!docs) {
         start("step_documents", docsTitle);
-        docs = current;
+        docs = current!;
       }
-      docs!.fields.push(field);
-      current = docs!;
+      docs.fields.push(field);
+      current = docs;
       continue;
     }
 
     if (!current) start(field.id, "Your details");
-    current.fields.push(field);
+    current!.fields.push(field);
   }
 
   return steps.filter((s) => s.fields.length > 0);
