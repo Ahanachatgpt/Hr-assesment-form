@@ -6,8 +6,8 @@ import { AhanaLogo } from "@/components/AhanaLogo";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [username, setUsername] = useState("admin");
-  const [password, setPassword] = useState("admin123");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -56,17 +56,28 @@ export default function LoginPage() {
           <div className="mt-6 space-y-4">
             <div>
               <label className="field-label">Username</label>
-              <input value={username} onChange={(e) => setUsername(e.target.value)} />
+              <input
+                type="text"
+                placeholder="Enter username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                autoComplete="username"
+              />
             </div>
             <div>
               <label className="field-label">Password</label>
-              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+              <input
+                type="password"
+                placeholder="Enter password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
+              />
             </div>
           </div>
           <button className="btn-primary mt-6 w-full" disabled={loading}>
             {loading ? "Signing in…" : "Enter dashboard"}
           </button>
-          <p className="mt-4 text-center text-xs text-navy-500">Default login: admin / admin123</p>
         </form>
       </div>
     </div>
