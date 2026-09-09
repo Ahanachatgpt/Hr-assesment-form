@@ -47,6 +47,7 @@ export default function SettingsPage() {
   }
 
   async function testEmail() {
+    if (!form) return;
     setMsg("");
     setError("");
     const res = await fetch("/api/settings", {
