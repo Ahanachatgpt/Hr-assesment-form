@@ -45,6 +45,12 @@ export function FieldControl({ field, value, onChange, disabled, error, hideTitl
 
   if (field.type === "repeater") {
     const isEmployment = isEmploymentField(field);
+    const empEndField = isEmployment
+      ? (field.repeaterFields || []).find((rf) => rf.type === "date" && /end\s*date/i.test(rf.label))
+      : undefined;
+    const empOrgField = isEmployment
+      ? (field.repeaterFields || []).find((rf) => /organis|organiz/i.test(rf.label))
+      : undefined;
     const choseExperience = Array.isArray(value) && (value as unknown[]).length > 0;
     const choseFresher = Array.isArray(value) && (value as unknown[]).length === 0;
     const rows = choseExperience
@@ -108,6 +114,13 @@ export function FieldControl({ field, value, onChange, disabled, error, hideTitl
               {entryRows.map((row, i) => {
                 const defaultCount = field.defaultRows?.length || 0;
                 const canRemove = i >= defaultCount && entryRows.length > defaultCount;
+                const presentRowIndex = empEndField
+                  ? entryRows.findIndex((r) => r[empEndField.id] === "Present")
+                  : -1;
+                const isThisRowPresent = presentRowIndex === i;
+                const isAnotherRowPresent = presentRowIndex !== -1 && presentRowIndex !== i;
+                const hasOrgFilled = Boolean(empOrgField && String(row[empOrgField.id] ?? "").trim().length > 0);
+
                 return (
                   <div key={i} className="rounded-xl border border-navy-100 bg-navy-50/50 p-4">
                     {canRemove && (
@@ -121,42 +134,138 @@ export function FieldControl({ field, value, onChange, disabled, error, hideTitl
                         </button>
                       </div>
                     )}
-                    <div className="grid min-w-0 grid-cols-12 gap-3">
+                    <div className="grid min-w-0 grid-cols-12 gap-3 items-end">
                       {(field.repeaterFields || []).map((rf) => {
                         let rfToRender = rf;
-                        if (/education/i.test(field.label) && /examination|degree/i.test(rf.label)) {
-                          if (i === 0) rfToRender = { ...rf, label: "SSLC Examination / Degree" };
-                          else if (i === 1) rfToRender = { ...rf, label: "HSC Examination / Degree" };
-                          else if (i === 2)
-                            rfToRender = {
-                              ...rf,
-                              label: "UG Examination / Degree",
-                              placeholder: "e.g. B.Sc Nursing, B.Com, B.E",
-                            };
-                          else if (i === 3)
-                            rfToRender = {
-                              ...rf,
-                              label: "PG Examination / Degree",
-                              placeholder: "e.g. M.Sc Nursing, MBA, MD",
-                            };
-                          else
-                            rfToRender = {
-                              ...rf,
-                              label: `Qualification ${i + 1} Examination / Degree`,
-                              placeholder: "e.g. Diploma, Certification",
-                            };
+                        if (/education/i.test(field.label)) {
+                          if (/marks/i.test(rf.label)) {
+                            rfToRender = { ...rf, width: "third" };
+                          } else if (/examination|degree/i.test(rf.label)) {
+                            if (i === 0) rfToRender = { ...rf, label: "SSLC Examination / Degree" };
+                            else if (i === 1) rfToRender = { ...rf, label: "HSC Examination / Degree" };
+                            else if (i === 2)
+                              rfToRender = {
+                                ...rf,
+                                label: "UG Examination / Degree",
+                                placeholder: "e.g. B.Sc Nursing, B.Com, B.E",
+                              };
+                            else if (i === 3)
+                              rfToRender = {
+                                ...rf,
+                                label: "PG Examination / Degree",
+                                placeholder: "e.g. M.Sc Nursing, MBA, MD",
+                              };
+                            else
+                              rfToRender = {
+                                ...rf,
+                                label: `Qualification ${i + 1} Examination / Degree`,
+                                placeholder: "e.g. Diploma, Certification",
+                              };
+                          }
                         }
+
+                        // For Employment Details: Show question only when organization name is filled AND no other row is currently marked Present
+                        const isEmpStartDate = isEmployment && /start\s*date/i.test(rf.label);
+                        const isEmpEndDate = isEmployment && empEndField && rf.id === empEndField.id;
+                        const showOrgQuestion = isEmpStartDate && hasOrgFilled && !isAnotherRowPresent;
+
                         return (
-                          <FieldControl
-                            key={rf.id}
-                            field={rfToRender}
-                            value={row[rf.id]}
-                            onChange={(v) => {
-                              const next = entryRows.map((r, idx) => (idx === i ? { ...r, [rf.id]: v } : r));
-                              onChange(next);
-                            }}
-                            disabled={disabled}
-                          />
+                          <div key={rf.id} className={`${widthClass(rfToRender.width, rfToRender.type)} contents`}>
+                            {showOrgQuestion && (
+                              <div className="col-span-12 rounded-xl border border-navy-200 bg-white p-3.5 shadow-xs transition-all">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                  <div>
+                                    <p className="text-sm font-semibold text-navy-900">
+                                      Are you currently working in this organisation?
+                                    </p>
+                                    <p className="text-xs text-navy-500">
+                                      Select Yes if this is your current employer (only one organisation can be marked as Present).
+                                    </p>
+                                  </div>
+                                  <div className="flex items-center gap-2 shrink-0">
+                                    <button
+                                      type="button"
+                                      disabled={disabled}
+                                      onClick={() => {
+                                        const next = entryRows.map((r, idx) => {
+                                          if (!empEndField) return r;
+                                          if (idx === i) return { ...r, [empEndField.id]: "Present" };
+                                          if (r[empEndField.id] === "Present") return { ...r, [empEndField.id]: "" };
+                                          return r;
+                                        });
+                                        onChange(next);
+                                      }}
+                                      className={`min-w-[4.5rem] rounded-lg border px-4 py-1.5 text-xs font-semibold transition ${
+                                        isThisRowPresent
+                                          ? "border-emerald-600 bg-emerald-600 text-white shadow-xs"
+                                          : "border-navy-200 bg-white text-navy-800 hover:border-navy-400 hover:bg-navy-50"
+                                      }`}
+                                    >
+                                      Yes
+                                    </button>
+                                    <button
+                                      type="button"
+                                      disabled={disabled}
+                                      onClick={() => {
+                                        if (empEndField && row[empEndField.id] === "Present") {
+                                          const next = entryRows.map((r, idx) =>
+                                            idx === i ? { ...r, [empEndField.id]: "" } : r
+                                          );
+                                          onChange(next);
+                                        }
+                                      }}
+                                      className={`min-w-[4.5rem] rounded-lg border px-4 py-1.5 text-xs font-semibold transition ${
+                                        !isThisRowPresent
+                                          ? "border-navy-800 bg-navy-800 text-white shadow-xs"
+                                          : "border-navy-200 bg-white text-navy-800 hover:border-navy-400 hover:bg-navy-50"
+                                      }`}
+                                    >
+                                      No
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+
+                            {isEmpEndDate && isThisRowPresent && hasOrgFilled ? (
+                              <div className={`${widthClass(rfToRender.width, rfToRender.type)} flex flex-col justify-end`} data-field-id={rf.id}>
+                                <div className="mb-1.5 flex min-h-[1.5rem] items-end">
+                                  <label className="form-h3 field-label !mb-0">
+                                    {rfToRender.label}
+                                    {rfToRender.required && <span className="text-red-600"> *</span>}
+                                  </label>
+                                </div>
+                                <div className="flex h-[42px] items-center justify-between rounded-lg border border-emerald-300 bg-emerald-50 px-3.5 text-sm font-semibold text-emerald-800 shadow-xs">
+                                  <span className="flex items-center gap-2">
+                                    <span className="inline-block h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                    Present (Currently Working)
+                                  </span>
+                                  {!disabled && (
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const next = entryRows.map((r, idx) => (idx === i ? { ...r, [rf.id]: "" } : r));
+                                        onChange(next);
+                                      }}
+                                      className="text-xs font-semibold text-emerald-700 underline hover:text-emerald-950"
+                                    >
+                                      Change to No
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                            ) : (
+                              <FieldControl
+                                field={rfToRender}
+                                value={row[rf.id]}
+                                onChange={(v) => {
+                                  const next = entryRows.map((r, idx) => (idx === i ? { ...r, [rf.id]: v } : r));
+                                  onChange(next);
+                                }}
+                                disabled={disabled}
+                              />
+                            )}
+                          </div>
                         );
                       })}
                     </div>
@@ -179,31 +288,13 @@ export function FieldControl({ field, value, onChange, disabled, error, hideTitl
     );
   }
 
-  const isEndDate = field.type === "date" && /end\s*date/i.test(field.label);
-
   return (
-    <div className={widthClass(field.width, field.type)} data-field-id={field.id}>
-      <div
-        className={`mb-1.5 flex flex-wrap items-baseline justify-between gap-1.5 ${
-          field.width && field.width !== "full" ? "md:min-h-[2.5rem] md:items-end" : ""
-        }`}
-      >
+    <div className={`${widthClass(field.width, field.type)} flex flex-col justify-end`} data-field-id={field.id}>
+      <div className="mb-1.5 flex min-h-[1.5rem] items-end">
         <label className="form-h3 field-label !mb-0">
           {field.label}
           {required}
         </label>
-        {isEndDate && (
-          <label className="inline-flex cursor-pointer select-none items-center gap-1.5 text-xs font-semibold text-navy-700 hover:text-navy-950">
-            <input
-              type="checkbox"
-              checked={value === "Present"}
-              onChange={(e) => onChange(e.target.checked ? "Present" : "")}
-              disabled={disabled}
-              className="h-3.5 w-3.5 rounded border-navy-300 text-navy-800 focus:ring-navy-400"
-            />
-            <span className={value === "Present" ? "font-bold text-emerald-700" : ""}>Present</span>
-          </label>
-        )}
       </div>
       {field.helpText && <p className="mb-1.5 text-xs text-navy-500">{field.helpText}</p>}
       <ControlInner field={field} value={value} onChange={onChange} disabled={disabled} error={shownError} />

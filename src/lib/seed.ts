@@ -19,9 +19,9 @@ export function defaultHrForm(): AssessmentForm {
 
   const eduExam = field({ type: "text", label: "Examination / Degree", required: true, width: "half" });
   const eduSchool = field({ type: "text", label: "School / College", required: true, width: "half" });
-  const eduStart = field({ type: "date", label: "Start Date", required: true, width: "third", hideDay: true });
-  const eduEnd = field({ type: "date", label: "End Date", required: true, width: "third", hideDay: true });
-  const eduMarks = field({ type: "text", label: "Marks obtained in %", placeholder: "e.g. 90.4", width: "quarter" });
+  const eduStart = field({ type: "date", label: "Start Date", required: false, width: "third", hideDay: true });
+  const eduEnd = field({ type: "date", label: "End Date", required: false, width: "third", hideDay: true });
+  const eduMarks = field({ type: "text", label: "Marks obtained in %", placeholder: "e.g. 90.4", width: "third" });
 
   const empOrg = field({ type: "text", label: "Organisation Name", width: "half" });
   const empDesig = field({ type: "text", label: "Designation", width: "half" });
