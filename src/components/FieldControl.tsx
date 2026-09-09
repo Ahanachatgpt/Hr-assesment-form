@@ -179,16 +179,32 @@ export function FieldControl({ field, value, onChange, disabled, error, hideTitl
     );
   }
 
+  const isEndDate = field.type === "date" && /end\s*date/i.test(field.label);
+
   return (
     <div className={widthClass(field.width, field.type)} data-field-id={field.id}>
-      <label
-        className={`form-h3 field-label ${
-          field.width && field.width !== "full" ? "md:flex md:min-h-[2.5rem] md:items-end" : ""
+      <div
+        className={`mb-1.5 flex flex-wrap items-baseline justify-between gap-1.5 ${
+          field.width && field.width !== "full" ? "md:min-h-[2.5rem] md:items-end" : ""
         }`}
       >
-        {field.label}
-        {required}
-      </label>
+        <label className="form-h3 field-label !mb-0">
+          {field.label}
+          {required}
+        </label>
+        {isEndDate && (
+          <label className="inline-flex cursor-pointer select-none items-center gap-1.5 text-xs font-semibold text-navy-700 hover:text-navy-950">
+            <input
+              type="checkbox"
+              checked={value === "Present"}
+              onChange={(e) => onChange(e.target.checked ? "Present" : "")}
+              disabled={disabled}
+              className="h-3.5 w-3.5 rounded border-navy-300 text-navy-800 focus:ring-navy-400"
+            />
+            <span className={value === "Present" ? "font-bold text-emerald-700" : ""}>Present</span>
+          </label>
+        )}
+      </div>
       {field.helpText && <p className="mb-1.5 text-xs text-navy-500">{field.helpText}</p>}
       <ControlInner field={field} value={value} onChange={onChange} disabled={disabled} error={shownError} />
       {shownError && <p className="mt-1.5 text-xs font-medium text-red-600">{shownError}</p>}
@@ -355,6 +371,22 @@ function ControlInner({ field, value, onChange, disabled, error }: Props) {
   }
 
   if (field.type === "date") {
+    if (value === "Present") {
+      return (
+        <div className="flex h-[42px] items-center justify-between rounded-lg border border-emerald-300 bg-emerald-50 px-3.5 text-sm font-semibold text-emerald-800 shadow-sm">
+          <span>Present (Currently Working)</span>
+          {!disabled && (
+            <button
+              type="button"
+              onClick={() => onChange("")}
+              className="text-xs text-emerald-700 underline hover:text-emerald-900"
+            >
+              Clear
+            </button>
+          )}
+        </div>
+      );
+    }
     const isDob = isDobField(field);
     const hideDay =
       Boolean(field.hideDay) ||
