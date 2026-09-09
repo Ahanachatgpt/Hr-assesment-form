@@ -1,0 +1,114 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --navy: #142e4e;
+  --cream: #f6f1e8;
+}
+
+html,
+body {
+  min-height: 100%;
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+body {
+  @apply bg-navy-50 text-navy-900 antialiased;
+}
+
+.paper-bg {
+  background-color: #f4efe6;
+  background-image:
+    radial-gradient(ellipse at top, rgba(212, 160, 23, 0.08), transparent 50%),
+    linear-gradient(180deg, #f8f4ec 0%, #efe8da 100%);
+}
+
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+input[type="number"],
+input[type="date"],
+input[type="password"],
+select,
+textarea {
+  @apply w-full rounded-lg border border-navy-200 bg-white px-3.5 py-2.5 text-sm text-navy-900 shadow-sm outline-none transition placeholder:text-navy-300 focus:border-navy-500 focus:ring-2 focus:ring-navy-200;
+}
+
+input.field-invalid,
+select.field-invalid,
+textarea.field-invalid,
+input[type="tel"].field-invalid,
+input[type="text"].field-invalid {
+  border-color: #ef4444 !important;
+  background-color: #fef2f2 !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.25) !important;
+}
+
+textarea {
+  @apply min-h-[96px] resize-y whitespace-pre-wrap;
+}
+
+label.field-label,
+.form-h3 {
+  @apply mb-1.5 block break-words text-[15px] font-semibold leading-snug text-navy-800;
+}
+
+.form-h1 {
+  @apply font-display text-2xl font-semibold leading-tight tracking-tight sm:text-3xl;
+}
+
+.form-h2 {
+  @apply font-display text-lg font-semibold leading-snug tracking-tight text-navy-900 sm:text-xl;
+}
+
+.form-section {
+  @apply col-span-12 mt-8 border-t border-navy-200 pt-5 first:mt-0 first:border-t-0 first:pt-0;
+}
+
+@media (max-width: 639px) {
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="number"],
+  input[type="date"],
+  input[type="password"],
+  select,
+  textarea {
+    font-size: 16px;
+    max-width: 100%;
+  }
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 1;
+}
+
+input[type="file"] {
+  max-width: 100%;
+}
+
+.btn-primary {
+  @apply inline-flex items-center justify-center gap-2 rounded-lg bg-navy-800 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-navy-700 disabled:cursor-not-allowed disabled:opacity-50;
+}
+
+.btn-secondary {
+  @apply inline-flex items-center justify-center gap-2 rounded-lg border border-navy-200 bg-white px-4 py-2.5 text-sm font-semibold text-navy-800 shadow-sm transition hover:bg-navy-50 disabled:opacity-50;
+}
+
+.btn-ghost {
+  @apply inline-flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-navy-700 transition hover:bg-navy-100;
+}
+
+.card {
+  @apply rounded-2xl border border-navy-100 bg-white shadow-card;
+}
+
+.badge {
+  @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold;
+}

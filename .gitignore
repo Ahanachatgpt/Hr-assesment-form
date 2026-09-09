@@ -1,0 +1,8 @@
+node_modules
+.next
+data/*.json
+uploads
+!uploads/.gitkeep
+.env
+*.log
+cookies.txt
