@@ -62,8 +62,8 @@ export function defaultHrForm(): AssessmentForm {
     defaultRows: [
       { [eduExam.id]: "SSLC" },
       { [eduExam.id]: "HSC" },
-      { [eduExam.id]: "UG" },
-      { [eduExam.id]: "PG" },
+      { [eduExam.id]: "" },
+      { [eduExam.id]: "" },
     ],
   };
 

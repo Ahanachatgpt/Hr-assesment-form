@@ -105,35 +105,64 @@ export function FieldControl({ field, value, onChange, disabled, error, hideTitl
         {showEntries && (
           <>
             <div className="mt-3 space-y-4">
-              {entryRows.map((row, i) => (
-                <div key={i} className="rounded-xl border border-navy-100 bg-navy-50/50 p-4">
-                  {entryRows.length > 1 && (
-                    <div className="mb-3 flex justify-end">
-                      <button
-                        type="button"
-                        className="text-xs font-medium text-red-600"
-                        onClick={() => onChange(entryRows.filter((_, idx) => idx !== i))}
-                      >
-                        Remove
-                      </button>
+              {entryRows.map((row, i) => {
+                const defaultCount = field.defaultRows?.length || 0;
+                const canRemove = i >= defaultCount && entryRows.length > defaultCount;
+                return (
+                  <div key={i} className="rounded-xl border border-navy-100 bg-navy-50/50 p-4">
+                    {canRemove && (
+                      <div className="mb-3 flex justify-end">
+                        <button
+                          type="button"
+                          className="text-xs font-medium text-red-600 hover:underline"
+                          onClick={() => onChange(entryRows.filter((_, idx) => idx !== i))}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    )}
+                    <div className="grid min-w-0 grid-cols-12 gap-3">
+                      {(field.repeaterFields || []).map((rf) => {
+                        let rfToRender = rf;
+                        if (/education/i.test(field.label) && /examination|degree/i.test(rf.label)) {
+                          if (i === 0) rfToRender = { ...rf, label: "SSLC Examination / Degree" };
+                          else if (i === 1) rfToRender = { ...rf, label: "HSC Examination / Degree" };
+                          else if (i === 2)
+                            rfToRender = {
+                              ...rf,
+                              label: "UG Examination / Degree",
+                              placeholder: "e.g. B.Sc Nursing, B.Com, B.E",
+                            };
+                          else if (i === 3)
+                            rfToRender = {
+                              ...rf,
+                              label: "PG Examination / Degree",
+                              placeholder: "e.g. M.Sc Nursing, MBA, MD",
+                            };
+                          else
+                            rfToRender = {
+                              ...rf,
+                              label: `Qualification ${i + 1} Examination / Degree`,
+                              placeholder: "e.g. Diploma, Certification",
+                            };
+                        }
+                        return (
+                          <FieldControl
+                            key={rf.id}
+                            field={rfToRender}
+                            value={row[rf.id]}
+                            onChange={(v) => {
+                              const next = entryRows.map((r, idx) => (idx === i ? { ...r, [rf.id]: v } : r));
+                              onChange(next);
+                            }}
+                            disabled={disabled}
+                          />
+                        );
+                      })}
                     </div>
-                  )}
-                  <div className="grid min-w-0 grid-cols-12 gap-3">
-                    {(field.repeaterFields || []).map((rf) => (
-                      <FieldControl
-                        key={rf.id}
-                        field={rf}
-                        value={row[rf.id]}
-                        onChange={(v) => {
-                          const next = entryRows.map((r, idx) => (idx === i ? { ...r, [rf.id]: v } : r));
-                          onChange(next);
-                        }}
-                        disabled={disabled}
-                      />
-                    ))}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
             <button
               type="button"

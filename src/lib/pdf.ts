@@ -657,7 +657,21 @@ function drawGrid(
 
   rows.forEach((row, idx) => {
     const cells = numbered
-      ? [String(idx + 1), ...cols.map((c) => display(row[c.id]))]
+      ? [
+          String(idx + 1),
+          ...cols.map((c) => {
+            const raw = row[c.id];
+            if (/education/i.test(title) && /examination|degree/i.test(c.label)) {
+              const text = String(raw ?? "").trim();
+              if (idx === 0) return text || "SSLC";
+              if (idx === 1) return text || "HSC";
+              if (idx === 2) return text ? (/^ug\b/i.test(text) ? text : `UG: ${text}`) : "UG";
+              if (idx === 3) return text ? (/^pg\b/i.test(text) ? text : `PG: ${text}`) : "PG";
+              return text;
+            }
+            return display(raw);
+          }),
+        ]
       : cols.map((c) => display(row[c.id]));
     let rowH = GRID_ROW_H;
     const wrapped = cells.map((cell, i) => {
