@@ -206,7 +206,7 @@ export function defaultHrForm(): AssessmentForm {
       }),
       field({
         type: "yesno",
-        label: "Are you presently taking medication for any illness or disease?",
+        label: "Are you presently taking medication for any illness or conditions?",
         width: "half",
       }),
       field({
@@ -343,7 +343,7 @@ export function demoSubmissions(forms: AssessmentForm[]): Submission[] {
     [pick(hr.fields, "How did you come to know about this vacancy?")!]: "Job portal",
     [pick(hr.fields, "Have you recently attended any interviews or are you currently attending any?")!]: "No",
     [pick(hr.fields, "How many days would you require to Join?")!]: "Immediately",
-    [pick(hr.fields, "Are you presently taking medication for any illness or disease?")!]: "No",
+    [pick(hr.fields, "Are you presently taking medication for any illness or conditions?")!]: "No",
     [pick(hr.fields, "Do you possess vehicle for attending office?")!]: "No",
     [pick(hr.fields, "Do you smoke?")!]: "No",
     [pick(hr.fields, "Have you been interviewed by us before")!]: "No",

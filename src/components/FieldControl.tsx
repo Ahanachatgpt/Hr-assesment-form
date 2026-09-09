@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { FormField } from "@/lib/types";
 import { isDobField, isEmploymentField, isMobileField, mobileDigits, selectChoice, showSelectNotes, yesNoChoice } from "@/lib/utils";
 import { DateDropdowns } from "./DateDropdowns";
@@ -530,6 +531,18 @@ function ControlInner({ field, value, onChange, disabled, error }: Props) {
     );
   }
 
+  if (field.type === "text" && /submitter.*location|user.*location/i.test(field.label)) {
+    return (
+      <LocationInput
+        field={field}
+        value={value}
+        onChange={onChange}
+        disabled={disabled}
+        invalid={invalid}
+      />
+    );
+  }
+
   const inputType = field.type === "email" || field.type === "number" ? field.type : "text";
   return (
     <input
@@ -539,6 +552,106 @@ function ControlInner({ field, value, onChange, disabled, error }: Props) {
       value={String(value ?? "")}
       onChange={(e) => onChange(e.target.value)}
     />
+  );
+}
+
+function LocationInput({
+  field,
+  value,
+  onChange,
+  disabled,
+  invalid,
+}: {
+  field: FormField;
+  value: unknown;
+  onChange: (value: unknown) => void;
+  disabled?: boolean;
+  invalid?: boolean;
+}) {
+  const [detecting, setDetecting] = useState(false);
+
+  useEffect(() => {
+    if (!value) {
+      detectLocation();
+    }
+  }, []);
+
+  async function detectLocation() {
+    setDetecting(true);
+    let detected = false;
+
+    if (typeof window !== "undefined" && "geolocation" in navigator) {
+      try {
+        const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            timeout: 6000,
+            maximumAge: 60000,
+          });
+        });
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`
+        );
+        if (res.ok) {
+          const data = await res.json();
+          const addr = data.address || {};
+          const city =
+            addr.city ||
+            addr.town ||
+            addr.village ||
+            addr.suburb ||
+            addr.state_district ||
+            addr.county ||
+            "";
+          const state = addr.state || "";
+          const loc = [city, state].filter(Boolean).join(", ");
+          if (loc) {
+            onChange(loc);
+            detected = true;
+          }
+        }
+      } catch {
+        // Fallback to IP geolocation
+      }
+    }
+
+    if (!detected) {
+      try {
+        const res = await fetch("/api/public/location");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.location) {
+            onChange(data.location);
+            detected = true;
+          }
+        }
+      } catch {
+        // Fallback silently
+      }
+    }
+
+    setDetecting(false);
+  }
+
+  return (
+    <div className="relative">
+      <input
+        type="text"
+        disabled={disabled}
+        placeholder={field.placeholder || "City / town"}
+        className={`${invalidClass(invalid || false) || ""} pr-28`.trim()}
+        value={String(value ?? "")}
+        onChange={(e) => onChange(e.target.value)}
+      />
+      <button
+        type="button"
+        disabled={disabled || detecting}
+        onClick={detectLocation}
+        className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-md bg-navy-100/90 px-2.5 py-1 text-xs font-semibold text-navy-800 hover:bg-navy-200 transition disabled:opacity-50"
+        title="Automatically detect current location"
+      >
+        {detecting ? "📍 Locating..." : "📍 Auto-detect"}
+      </button>
+    </div>
   );
 }
 
