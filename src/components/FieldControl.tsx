@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { FormField } from "@/lib/types";
 import { isDobField, isEmploymentField, isMobileField, mobileDigits, selectChoice, showSelectNotes, yesNoChoice } from "@/lib/utils";
+import { compressImage } from "@/lib/imageCompress";
 import { DateDropdowns } from "./DateDropdowns";
 
 interface Props {
@@ -472,7 +473,15 @@ function ControlInner({ field, value, onChange, disabled, error }: Props) {
         type="file"
         disabled={disabled}
         accept={field.accept}
-        onChange={(e) => onChange(e.target.files?.[0] || null)}
+        onChange={async (e) => {
+          const file = e.target.files?.[0] || null;
+          if (file && file.type.startsWith("image/")) {
+            const compressed = await compressImage(file);
+            onChange(compressed);
+          } else {
+            onChange(file);
+          }
+        }}
         className="block w-full text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-navy-800 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white"
       />
     );

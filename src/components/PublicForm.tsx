@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { AssessmentForm, FormField } from "@/lib/types";
 import { buildFormSteps } from "@/lib/formSteps";
 import { fieldError, hasEmploymentExperience, isEmploymentField, isMobileField, isMultiFileField, isPhotoField, isRolesField, validateAnswers } from "@/lib/utils";
+import { compressImage } from "@/lib/imageCompress";
 import { FieldControl } from "./FieldControl";
 import { AhanaLogo } from "./AhanaLogo";
 
@@ -143,11 +144,22 @@ export function PublicForm({ slug }: { slug: string }) {
         for (const file of list) fd.append(`file_${id}`, file);
       }
       const res = await fetch(`/api/public/forms/${slug}/submit`, { method: "POST", body: fd });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Submit failed");
+      let data: { error?: string } = {};
+      try {
+        data = await res.json();
+      } catch {
+        // Fallback for non-JSON or HTML server responses
+      }
+      if (!res.ok) {
+        throw new Error(data.error || `Submission failed (Server responded with error ${res.status}).`);
+      }
       router.push(`/apply/${slug}/success`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Submit failed");
+      if (err instanceof TypeError && /fetch/i.test(err.message)) {
+        setError("Network connection issue or upload timeout. Please check your connection and tap Submit again.");
+      } else {
+        setError(err instanceof Error ? err.message : "Submit failed");
+      }
     } finally {
       setSubmitting(false);
     }
@@ -224,9 +236,14 @@ export function PublicForm({ slug }: { slug: string }) {
                         type="file"
                         accept={field.accept}
                         multiple={isMultiFileField(field)}
-                        onChange={(e) => {
-                          const picked = Array.from(e.target.files || []);
-                          if (!picked.length) return;
+                        onChange={async (e) => {
+                          const rawPicked = Array.from(e.target.files || []);
+                          if (!rawPicked.length) return;
+                          const picked = await Promise.all(
+                            rawPicked.map((f) =>
+                              f.type.startsWith("image/") ? compressImage(f) : Promise.resolve(f)
+                            )
+                          );
                           setFiles((prev) => {
                             if (isMultiFileField(field)) {
                               const existing = prev[field.id] || [];

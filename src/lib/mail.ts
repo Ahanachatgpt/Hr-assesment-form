@@ -46,6 +46,9 @@ export async function sendSubmissionEmail(opts: {
     auth: settings.smtpUser
       ? { user: settings.smtpUser, pass: settings.smtpPass }
       : undefined,
+    connectionTimeout: 15000,
+    greetingTimeout: 15000,
+    socketTimeout: 30000,
   });
 
   const attachments: { filename: string; path: string }[] = [];

@@ -178,35 +178,54 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ slug: stri
     createdAt: new Date().toISOString(),
   };
 
+  let pdfPath: string | undefined;
   try {
-    const pdfPath = await generateSubmissionPdf(form, sub, settings);
+    pdfPath = await generateSubmissionPdf(form, sub, settings);
     sub.pdfPath = pdfPath;
-    const destEmail = form.notifyEmail || settings.notifyEmail;
-    if (!smtpReady({ ...settings, notifyEmail: destEmail })) {
-      sub.emailStatus = "not_configured";
-      sub.emailError = "SMTP or notification email is not configured. Submission is saved; send later from admin.";
-    } else {
-      const resumeAbs = resumePath ? path.join(UPLOAD_DIR, "resumes", resumePath) : undefined;
-      const extraAbs = extraDocs
-        .filter((d) => d.path)
-        .map((d) => ({ filename: d.name, path: path.join(UPLOAD_DIR, "docs", d.path) }));
-      const result = await sendSubmissionEmail({
-        settings: { ...settings, notifyEmail: destEmail },
-        submission: sub,
-        pdfPath,
-        resumePath: resumeAbs,
-        extraAttachments: extraAbs,
-        to: destEmail,
-      });
-      sub.emailStatus = result.ok ? "sent" : "failed";
-      sub.emailError = result.error;
-      sub.emailedTo = result.to;
-    }
   } catch (e) {
-    sub.emailStatus = "failed";
-    sub.emailError = e instanceof Error ? e.message : "Failed to generate PDF or send email";
+    console.error("PDF generation failed:", e);
   }
 
+  const destEmail = form.notifyEmail || settings.notifyEmail;
+  if (!smtpReady({ ...settings, notifyEmail: destEmail })) {
+    sub.emailStatus = "not_configured";
+    sub.emailError = "SMTP or notification email is not configured. Submission is saved; send later from admin.";
+  }
+
+  // Save submission to database immediately so candidate data is never lost
   await store.addSubmission(sub);
+
+  // Send email in background if SMTP is ready
+  if (sub.emailStatus === "pending") {
+    const resumeAbs = resumePath ? path.join(UPLOAD_DIR, "resumes", resumePath) : undefined;
+    const extraAbs = extraDocs
+      .filter((d) => d.path)
+      .map((d) => ({ filename: d.name, path: path.join(UPLOAD_DIR, "docs", d.path) }));
+
+    (async () => {
+      try {
+        const result = await sendSubmissionEmail({
+          settings: { ...settings, notifyEmail: destEmail },
+          submission: sub,
+          pdfPath: sub.pdfPath,
+          resumePath: resumeAbs,
+          extraAttachments: extraAbs,
+          to: destEmail,
+        });
+        await store.updateSubmission(sub.id, {
+          emailStatus: result.ok ? "sent" : "failed",
+          emailError: result.error,
+          emailedTo: result.to,
+        });
+      } catch (err) {
+        console.error("Background email sending error:", err);
+        await store.updateSubmission(sub.id, {
+          emailStatus: "failed",
+          emailError: err instanceof Error ? err.message : "Failed to send email",
+        });
+      }
+    })();
+  }
+
   return NextResponse.json({ ok: true, id: sub.id, emailStatus: sub.emailStatus });
 }
